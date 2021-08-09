@@ -4,6 +4,10 @@ It is written in Python and uses Tkinter for its graphical interface.
 
 Annotations are saved as 'results.pkl' (in pickle format) in the specified folder.
 
+## Examples
+![alt text](https://github.com/noy2121/Image-Annotation-Tool/blob/main/pic1.jpg?raw=true)
+![alt text](https://github.com/noy2121/Image-Annotation-Tool/blob/main/pic2.jpg?raw=true)
+
 ## Installation
 Program has been tested with Python 3.8 and PIL 7.2.0.
 The GUI compatible with image file types - jpg, jfif, png.

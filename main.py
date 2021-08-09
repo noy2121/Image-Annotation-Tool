@@ -6,15 +6,72 @@ import pickle
 import os
 
 
+def main():
+    global label_dir
+    global image_dir
+    global browse_btn
+    global load_images_btn
+    global canvas
+    global next_btn
+    global back_btn
+    global del_btn
+    global save_btn
+    global exit_btn
+
+    root.title("Image Annotation Tool")
+    root.geometry("800x550")
+
+    # much buttons, such wow
+    label_dir.config(text="Choose a directory:", width=20, anchor='w')
+    image_dir.config(width=40)
+    browse_btn.config(text="Browse", padx=10, command=browse)
+    load_images_btn.config(text="Load images", padx=10, state=DISABLED)
+    canvas.config(width=600, height=400)
+    next_btn.config(text=">", width=20, state=DISABLED)
+    back_btn.config(text="<", width=20, state=DISABLED)
+    del_btn.config(text="Delete last annotation (D)", width=20, state=DISABLED)
+    save_btn.config(
+        text="Save current data (S)", width=20, state=DISABLED, command=save
+    )
+    exit_btn.config(
+        text="Save all and exit (Q)", width=20, state=DISABLED, command=save_and_exit
+    )
+
+    # display them nicely
+    label_dir.grid(row=0, column=0)
+    image_dir.grid(row=1, column=0, columnspan=2)
+    browse_btn.grid(row=1, column=2, sticky='w')
+    load_images_btn.grid(row=2, column=0, padx=(0, 48))
+    canvas.grid(row=3, column=0, columnspan=3, rowspan=5)
+    del_btn.grid(row=3, column=3)
+    save_btn.grid(row=4, column=3)
+    exit_btn.grid(row=5, column=3)
+    next_btn.grid(row=8, column=2)
+    back_btn.grid(row=8, column=0)
+
+    # mouse & keys commands
+    canvas.bind("<Button-1>", click)
+    canvas.bind("<B1-Motion>", drag)
+    next_btn.bind_all("<Right>", lambda event: next_btn.invoke())
+    back_btn.bind_all("<Left>", lambda event: back_btn.invoke())
+    canvas.bind_all("<s>", save)
+    save_btn.bind_all("<s>", lambda event: save_btn.invoke())
+    del_btn.bind_all("<d>", lambda event: del_btn.invoke())
+    exit_btn.bind_all("<q>", lambda event: exit_btn.invoke())
+
+    # create infinite loop
+    root.mainloop()
+
+
 # browse directories
 def browse():
     """
     Browse folders and choose one to start annotate.
     """
     image_dir.delete(0, END)
-    directory = filedialog.askdirectory(title='Select A Folder')
+    directory = filedialog.askdirectory(title="Select A Folder")
     if not os.listdir(directory):
-        messagebox.showwarning(message='Folder is empty')
+        messagebox.showwarning(message="Folder is empty")
     image_dir.insert(0, directory)
     load_images_btn.config(command=lambda: load_images(image_dir.get()), state=NORMAL)
 
@@ -31,23 +88,28 @@ def load_images(directory):
 
     # reset variable each time we load new images
     image_list = []
-    images = glob.glob(directory + f'/*.jpg') + glob.glob(directory + f'/*.jfif') + glob.glob(directory + f'/*.png')
+    images = (
+        glob.glob(directory + f"/*.jpg")
+        + glob.glob(directory + f"/*.jfif")
+        + glob.glob(directory + f"/*.png")
+    )
     # iterate over the images, open them and create results dict
     for idx, filename in enumerate(images):
         image = Image.open(filename)
-        results[f'image{idx}'] = []
+        results[f"image{idx}"] = []
         image.thumbnail((500, 500), Image.ANTIALIAS)
         image = ImageTk.PhotoImage(image)
         image_list.append(image)
-
     # check for existing annotations
-    if os.path.exists('results.pickle'):
-        lines = ['Our special state-of-the-art mega-super-scanner', 'has found existing annotations.',
-                 'Do you want to load them?']
-        response = messagebox.askyesno('Text', '\n'.join(lines))
+    if os.path.exists("results.pickle"):
+        lines = [
+            "Our special state-of-the-art mega-super-scanner",
+            "has found existing annotations.",
+            "Do you want to load them?",
+        ]
+        response = messagebox.askyesno("Text", "\n".join(lines))
         if response == 1:
             results = load_annotations()
-
     del_btn.config(state=NORMAL)
     save_btn.config(state=NORMAL)
     exit_btn.config(state=NORMAL)
@@ -64,7 +126,7 @@ def click(event):
     """
     # the last rectangle becomes blue
     if len(rectangles) > 0:
-        canvas.itemconfig(rectangles[-1], outline='blue')
+        canvas.itemconfig(rectangles[-1], outline="blue")
     # define starting point
     bounds = canvas.bbox(image_canvas)
     if event.x < bounds[0]:
@@ -72,18 +134,24 @@ def click(event):
     elif event.x > bounds[2]:
         event.x = bounds[2]
     else:
-        coords['x2'] = event.x
+        coords["x2"] = event.x
     if event.y < bounds[1]:
         event.y = bounds[1]
     elif event.y > bounds[3]:
         event.y = bounds[3]
     else:
-        coords['y2'] = event.y
-    coords['x1'] = event.x
-    coords['y1'] = event.y
+        coords["y2"] = event.y
+    coords["x1"] = event.x
+    coords["y1"] = event.y
 
-    rectangle = canvas.create_rectangle(coords['x1'], coords['y1'], coords['x1'], coords['y1'], outline='red',
-                                        tags='rectangles')
+    rectangle = canvas.create_rectangle(
+        coords["x1"],
+        coords["y1"],
+        coords["x1"],
+        coords["y1"],
+        outline="red",
+        tags="rectangles",
+    )
     # create a rectangle on this point and store it
     rectangles.append(rectangle)
 
@@ -102,16 +170,17 @@ def drag(event):
     elif event.x > bounds[2]:
         event.x = bounds[2]
     else:
-        coords['x2'] = event.x
+        coords["x2"] = event.x
     if event.y < bounds[1]:
         event.y = bounds[1]
     elif event.y > bounds[3]:
         event.y = bounds[3]
     else:
-        coords['y2'] = event.y
-
+        coords["y2"] = event.y
     # change the coordinates of the rectangle while drawing it
-    canvas.coords(rectangles[-1], coords['x1'], coords['y1'], coords['x2'], coords['y2'])
+    canvas.coords(
+        rectangles[-1], coords["x1"], coords["y1"], coords["x2"], coords["y2"]
+    )
 
 
 def release(event, idx):
@@ -129,21 +198,22 @@ def release(event, idx):
     elif event.x > bounds[2]:
         event.x = bounds[2]
     else:
-        coords['x2'] = event.x
+        coords["x2"] = event.x
     if event.y < bounds[1]:
         event.y = bounds[1]
     elif event.y > bounds[3]:
         event.y = bounds[3]
     else:
-        coords['y2'] = event.y
-
+        coords["y2"] = event.y
     # change the coordinates of the rectangle to the final ones
-    canvas.coords(rectangles[-1], coords['x1'], coords['y1'], coords['x2'], coords['y2'])
+    canvas.coords(
+        rectangles[-1], coords["x1"], coords["y1"], coords["x2"], coords["y2"]
+    )
 
-    w = abs(coords['x2'] - coords['x1'])
-    h = abs(coords['y2'] - coords['y1'])
+    w = abs(coords["x2"] - coords["x1"])
+    h = abs(coords["y2"] - coords["y1"])
     # adding current rectangle to results
-    results[f'image{idx}'].append([coords['x1'], coords['y1'], w, h])
+    results[f"image{idx}"].append([coords["x1"], coords["y1"], w, h])
 
 
 def delete_last_rectangle(idx):
@@ -154,16 +224,16 @@ def delete_last_rectangle(idx):
     """
     canvas.delete(rectangles[-1])
     del rectangles[-1]
-    del results[f'image{idx}'][-1]
+    del results[f"image{idx}"][-1]
 
 
 def save():
     """
     Save current data.
     """
-    with open('results.pickle', 'wb') as handle:
+    with open("results.pickle", "wb") as handle:
         pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    messagebox.showinfo(message='Annotations have been saved successfully!')
+    messagebox.showinfo(message="Annotations have been saved successfully!")
 
 
 def save_and_exit():
@@ -171,23 +241,23 @@ def save_and_exit():
     Save current data and exit program.
     """
     save()
-    messagebox.showinfo(message='Goodbye')
+    messagebox.showinfo(message="Goodbye")
     root.quit()
-    print('It works!')
+    print("It works!")
 
 
 def clear_canvas():
     """
     Clear annotations from new image.
     """
-    canvas.itemconfig('rectangles', state='hidden')
+    canvas.itemconfig("rectangles", state="hidden")
 
 
 def load_annotations():
     """
     Load previous annotations
     """
-    with open('results.pickle', 'rb') as handle:
+    with open("results.pickle", "rb") as handle:
         prv_annotations = pickle.load(handle)
     return prv_annotations
 
@@ -198,13 +268,13 @@ def draw_previous_annotations(idx):
     Args:
         idx (int) -- index of the current image
     """
-    annotations = results[f'image{idx}']
+    annotations = results[f"image{idx}"]
     for annotation in annotations:
         x1 = annotation[0]
         y1 = annotation[1]
         x2 = annotation[0] + annotation[2]
         y2 = annotation[1] + annotation[3]
-        canvas.create_rectangle(x1, y1, x2, y2, outline='blue', tags='rectangles')
+        canvas.create_rectangle(x1, y1, x2, y2, outline="blue", tags="rectangles")
 
 
 def forward(idx):
@@ -221,14 +291,14 @@ def forward(idx):
     # load previous annotations if exist
     draw_previous_annotations(idx)
 
-    if idx == len(image_list)-1:
+    if idx == len(image_list) - 1:
         next_btn.config(state=DISABLED)
     else:
-        next_btn.config(state=NORMAL, command=lambda: forward(idx+1))
+        next_btn.config(state=NORMAL, command=lambda: forward(idx + 1))
     if idx == 0:
         back_btn.config(state=DISABLED)
     else:
-        back_btn.config(command=lambda: back(idx-1), state=NORMAL)
+        back_btn.config(command=lambda: back(idx - 1), state=NORMAL)
     del_btn.config(command=lambda: delete_last_rectangle(idx))
     canvas.bind("<ButtonRelease-1>", lambda event, arg=idx: release(event, arg))
 
@@ -251,62 +321,9 @@ def back(idx):
         back_btn.config(state=DISABLED)
     else:
         back_btn.config(command=lambda: back(idx - 1))
-    next_btn.config(command=lambda: forward(idx+1), state=NORMAL)
+    next_btn.config(command=lambda: forward(idx + 1), state=NORMAL)
     del_btn.config(command=lambda: delete_last_rectangle(idx))
     canvas.bind("<ButtonRelease-1>", lambda event, arg=idx: release(event, arg))
-
-
-def main():
-    global label_dir
-    global image_dir
-    global browse_btn
-    global load_images_btn
-    global canvas
-    global next_btn
-    global back_btn
-    global del_btn
-    global save_btn
-    global exit_btn
-
-    root.title('Image Annotation Tool')
-    root.geometry('800x550')
-
-    # much buttons, such wow
-    label_dir.config(text='Choose a directory:')
-    image_dir.config(width=40)
-    browse_btn.config(text='Browse', command=browse)
-    load_images_btn.config(text='Load images', state=DISABLED)
-    canvas.config(width=600, height=400)
-    next_btn.config(text='>', width=20, state=DISABLED)
-    back_btn.config(text='<', width=20, state=DISABLED)
-    del_btn.config(text='Delete last annotation (D)', width=20, state=DISABLED)
-    save_btn.config(text='Save current data (S)', width=20, state=DISABLED, command=save)
-    exit_btn.config(text='Save all and exit (Q)', width=20, state=DISABLED, command=save_and_exit)
-
-    # display them nicely
-    label_dir.grid(row=0, column=0)
-    image_dir.grid(row=1, column=0, columnspan=2)
-    browse_btn.grid(row=1, column=2)
-    load_images_btn.grid(row=2, column=0)
-    canvas.grid(row=3, column=0, columnspan=3, rowspan=5)
-    del_btn.grid(row=4, column=3)
-    save_btn.grid(row=5, column=3)
-    exit_btn.grid(row=6, column=3)
-    next_btn.grid(row=8, column=2)
-    back_btn.grid(row=8, column=0)
-
-    # mouse & keys commands
-    canvas.bind("<Button-1>", click)
-    canvas.bind("<B1-Motion>", drag)
-    next_btn.bind_all("<Right>", lambda event: next_btn.invoke())
-    back_btn.bind_all("<Left>", lambda event: back_btn.invoke())
-    canvas.bind_all("<s>", save)
-    save_btn.bind_all("<s>", lambda event: save_btn.invoke())
-    del_btn.bind_all("<d>", lambda event: del_btn.invoke())
-    exit_btn.bind_all("<q>", lambda event: exit_btn.invoke())
-
-    # create infinite loop
-    root.mainloop()
 
 
 # initialize root widget
@@ -327,11 +344,11 @@ exit_btn = Button(root)
 
 image_list = []
 # top left point, and bottom right point of the current rectangle
-coords = {'x1': 0, 'y1': 0, 'x2': 0, 'y2': 0}
+coords = {"x1": 0, "y1": 0, "x2": 0, "y2": 0}
 # list of the rectangles in each image
 rectangles = []
 # dictionary with all the data
 results = {}
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

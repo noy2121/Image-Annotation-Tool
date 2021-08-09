@@ -6,7 +6,7 @@ Annotations are saved as 'results.pkl' (in pickle format) in the specified folde
 
 ## Installation
 Program has been tested with Python 3.8 and PIL 7.2.0.
-The GUI compatible with image file type - jpg, jfif, png.
+The GUI compatible with image file types - jpg, jfif, png.
 ```
 pip install Pillow
 ```

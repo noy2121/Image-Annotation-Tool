@@ -114,8 +114,10 @@ def load_images(directory):
     save_btn.config(state=NORMAL)
     exit_btn.config(state=NORMAL)
 
-    # display first image
-    forward(0)
+    # check index of the last annotated image
+    idx = last_annotated_image()
+    # display images
+    forward(idx)
 
 
 def click(event):
@@ -275,6 +277,20 @@ def draw_previous_annotations(idx):
         x2 = annotation[0] + annotation[2]
         y2 = annotation[1] + annotation[3]
         canvas.create_rectangle(x1, y1, x2, y2, outline="blue", tags="rectangles")
+
+
+def last_annotated_image():
+    """
+    Check which image annotated last.
+    Return:
+        idx (int) -- index of the last annotated image.
+    """
+    idx = 0
+    for i, value in reversed(list(enumerate(results.values()))):
+        if len(value) != 0:
+            idx = i
+            break
+    return idx
 
 
 def forward(idx):
